@@ -1,0 +1,17 @@
+node_modules/
+.DS_Store
+build/
+.svelte-kit/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.env
+.env.local
+.vscode/
+.idea/
+*.log
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
