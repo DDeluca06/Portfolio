@@ -487,7 +487,9 @@ export async function getContainers(all: boolean = true): Promise<ContainerInfo[
     labels: container.Labels || {},
     state: container.State as ContainerInfo['state'],
     status: container.Status,
-    hostConfig: container.HostConfig || {},
+    hostConfig: {
+      networkMode: container.HostConfig?.NetworkMode
+    },
     networkSettings: {
       networks: Object.fromEntries(
         Object.entries(container.NetworkSettings?.Networks || {}).map(([name, network]) => [
@@ -506,7 +508,16 @@ export async function getContainers(all: boolean = true): Promise<ContainerInfo[
         ])
       )
     },
-    mounts: container.Mounts || []
+    mounts: (container.Mounts || []).map(m => ({
+      type: m.Type,
+      name: m.Name,
+      source: m.Source,
+      destination: m.Destination,
+      driver: m.Driver,
+      mode: m.Mode,
+      rw: m.RW,
+      propagation: m.Propagation
+    }))
   }));
 }
 
@@ -595,7 +606,7 @@ export async function getContainerStatsComputed(containerId: string): Promise<{
 export async function getServices(): Promise<ServiceInfo[]> {
   try {
     const services = await docker.listServices();
-    return services as ServiceInfo[];
+    return services as unknown as ServiceInfo[];
   } catch (error) {
     // Return empty array if not in Swarm mode
     if ((error as Error).message?.includes('This node is not a swarm manager')) {
@@ -611,7 +622,7 @@ export async function getServices(): Promise<ServiceInfo[]> {
 export async function getNodes(): Promise<NodeInfo[]> {
   try {
     const nodes = await docker.listNodes();
-    return nodes as NodeInfo[];
+    return nodes as unknown as NodeInfo[];
   } catch (error) {
     // Return empty array if not in Swarm mode
     if ((error as Error).message?.includes('This node is not a swarm manager')) {
@@ -626,7 +637,7 @@ export async function getNodes(): Promise<NodeInfo[]> {
  */
 export async function getNetworks(): Promise<NetworkInfo[]> {
   const networks = await docker.listNetworks();
-  return networks as NetworkInfo[];
+  return networks as unknown as NetworkInfo[];
 }
 
 /**
@@ -635,7 +646,7 @@ export async function getNetworks(): Promise<NetworkInfo[]> {
 export async function getTasks(filters?: Record<string, string[]>): Promise<TaskInfo[]> {
   try {
     const tasks = await docker.listTasks({ filters });
-    return tasks as TaskInfo[];
+    return tasks as unknown as TaskInfo[];
   } catch (error) {
     // Return empty array if not in Swarm mode
     if ((error as Error).message?.includes('This node is not a swarm manager')) {
@@ -780,9 +791,9 @@ export async function getDockerVersion(): Promise<{
     os: version.Os,
     arch: version.Arch,
     kernelVersion: version.KernelVersion,
-    buildTime: version.BuildTime,
-    platform: version.Platform,
-    experimental: version.Experimental
+    buildTime: version.BuildTime instanceof Date ? version.BuildTime.toISOString() : String(version.BuildTime),
+    platform: { name: (version.Platform as { Name: string }).Name },
+    experimental: false
   };
 }
 
@@ -806,9 +817,25 @@ export function subscribeToEvents(
     config?: string[];
   }
 ): () => void {
+  // Build filter string from filters object
+  let filterString = '';
+  if (filters) {
+    const filterObj: Record<string, unknown> = {};
+    if (filters.event) filterObj.event = filters.event;
+    if (filters.image) filterObj.image = filters.image;
+    if (filters.container) filterObj.container = filters.container;
+    if (filters.volume) filterObj.volume = filters.volume;
+    if (filters.network) filterObj.network = filters.network;
+    if (filters.daemon) filterObj.daemon = filters.daemon;
+    if (filters.node) filterObj.node = filters.node;
+    if (filters.service) filterObj.service = filters.service;
+    if (filters.type) filterObj.type = filters.type;
+    filterString = JSON.stringify(filterObj);
+  }
+
   const eventStream = docker.getEvents({
-    filters: filters ? { ...filters } : undefined
-  });
+    filters: filterString || undefined
+  } as unknown as Parameters<typeof docker.getEvents>[0]);
 
   const handleEvent = (chunk: Buffer) => {
     try {
@@ -830,7 +857,8 @@ export function subscribeToEvents(
   return () => {
     eventStream.then(stream => {
       stream.removeListener('data', handleEvent);
-      stream.destroy();
+      // @ts-expect-error - destroy exists on the underlying stream
+      stream.destroy?.();
     });
   };
 }
