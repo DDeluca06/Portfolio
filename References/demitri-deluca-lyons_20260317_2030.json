@@ -1,0 +1,378 @@
+{
+  "picture": {
+    "hidden": false,
+    "url": "https://storage.rxresu.me/cm8ywaawj22vwjee27mm3rtff/pictures/w54h68j7qhgilmebiidvbzrw.jpg",
+    "size": 120,
+    "rotation": 0,
+    "aspectRatio": 1,
+    "borderRadius": 0,
+    "borderColor": "rgba(0, 0, 0, 0)",
+    "borderWidth": 0,
+    "shadowColor": "rgba(0, 0, 0, 0.5)",
+    "shadowWidth": 0
+  },
+  "basics": {
+    "name": "Demitri DeLuca-Lyons",
+    "headline": "Entry Level IT Professional | Systems Administration, Technical Support, Automation",
+    "email": "ddelucalyons@gmail.com",
+    "phone": "‪(215) 645-2081‬",
+    "location": "Philadelphia PA 19134",
+    "website": {
+      "url": "",
+      "label": ""
+    },
+    "customFields": []
+  },
+  "summary": {
+    "title": "Summary",
+    "columns": 1,
+    "hidden": false,
+    "content": "<p>Dedicated Entry Level IT Professional with a strong foundation in IT systems administration, technical support, and automation. Proven ability to configure and maintain hardware/software, diagnose network issues, and provide effective user assistance. Passionate about leveraging technology, including innovative AI solutions, to enhance operational efficiency and drive positive business outcomes in a dynamic professional environment.</p>"
+  },
+  "sections": {
+    "profiles": {
+      "title": "Profiles",
+      "columns": 1,
+      "hidden": false,
+      "items": [
+        {
+          "id": "cnbk5f0aeqvhx69ebk7hktwd",
+          "hidden": false,
+          "icon": "linkedin",
+          "network": "LinkedIn",
+          "username": "Demitri DeLuca-Lyons",
+          "website": {
+            "url": "https://www.linkedin.com/in/demitri-deluca-lyons-747312319/",
+            "label": ""
+          }
+        },
+        {
+          "id": "ukl0uecvzkgm27mlye0wazlb",
+          "hidden": false,
+          "icon": "github",
+          "network": "GitHub",
+          "username": "DDeluca06",
+          "website": {
+            "url": "https://github.com/DDeluca06",
+            "label": ""
+          }
+        }
+      ]
+    },
+    "experience": {
+      "title": "Experience",
+      "columns": 1,
+      "hidden": false,
+      "items": [
+        {
+          "id": "r6543lil53ntrxmvel53gbtm",
+          "hidden": false,
+          "options": {
+            "showLinkInTitle": false
+          },
+          "company": "Launchpad Philly",
+          "position": "Associate",
+          "location": "Philadelphia, PA 19148",
+          "period": "January 2024 - Present",
+          "website": {
+            "url": "",
+            "label": ""
+          },
+          "description": "<ul><li><p>Provided technical assistance and communicated effectively with team members to ensure timely resolution of IT issues and successful project completion.</p></li><li><p>Offered direct technical support, troubleshooting and resolving complex issues related to system access, application functionality, and technology adoption for end-users.</p></li><li><p>Developed comprehensive technical documentation and quickstart guides, streamlining IT processes and facilitating user adoption of new technologies.</p></li><li><p>Configured, optimized, and maintained hardware and software across a fleet of 30+ machines to ensure consistent system performance.</p></li><li><p>Spearheaded an OS imaging and redeployment pipeline, streamlining provisioning for new and repurposed devices.</p></li><li><p>Designed and prototyped an internal Large Language Model (LLM) to enhance data retrieval and support data-driven decision-making, demonstrating innovative application of AI for business efficiency.</p></li></ul><p></p>",
+          "roles": []
+        },
+        {
+          "id": "y2h99jdordlrlylej6lltsbg",
+          "hidden": false,
+          "options": {
+            "showLinkInTitle": false
+          },
+          "company": "Seer Interactive",
+          "position": "AI & Innovation Intern",
+          "location": "Philadelphia, PA 19123",
+          "period": "October 2025 - December 2025",
+          "website": {
+            "url": "",
+            "label": ""
+          },
+          "description": "<p>Implemented a robust and secure Google Cloud Compute solution to host critical services, including AI applications, establishing a production-ready system with a secure web interface. Integrated with OpenAI compatible endpoints and data tools like Ninjacat to facilitate secure, client-specific data queries and context, ensuring data integrity and accessibility.</p>",
+          "roles": []
+        }
+      ]
+    },
+    "education": {
+      "title": "Education",
+      "columns": 1,
+      "hidden": false,
+      "items": [
+        {
+          "id": "yo3p200zo45c6cdqc6a2vtt3",
+          "hidden": false,
+          "school": "Furness High-School",
+          "degree": "",
+          "area": "Philadelphia, PA",
+          "grade": "",
+          "location": "",
+          "period": "August 2020 to June 2024",
+          "website": {
+            "url": "",
+            "label": ""
+          },
+          "description": "<p>Student Council, major technology assistant.</p>"
+        }
+      ]
+    },
+    "projects": {
+      "title": "Projects",
+      "columns": 1,
+      "hidden": false,
+      "items": [
+        {
+          "id": "aqd1vdsrlfic9dq2cclniwxp",
+          "hidden": false,
+          "name": "Homelab",
+          "period": "March 2022 - Present",
+          "website": {
+            "url": "",
+            "label": ""
+          },
+          "description": "<ul><li><p>Built and maintained a personal homelab supporting 10+ self-hosted services, including secure VPNs and NFS for network-wide storage access. Gained hands-on experience in IT infrastructure, network management, and system automation, including the deployment of lightweight AI tools for personal use, demonstrating comprehensive IT operational skills.</p></li></ul>"
+        }
+      ]
+    },
+    "skills": {
+      "title": "Skills",
+      "columns": 1,
+      "hidden": false,
+      "items": [
+        {
+          "id": "hn0keriukh6c0ojktl9gsgjm",
+          "hidden": false,
+          "icon": "",
+          "name": "Technologies",
+          "proficiency": "Advanced",
+          "level": 0,
+          "keywords": [
+            "HTML5",
+            "JavaScript",
+            "CSS",
+            "Python",
+            "PostgreSQL",
+            "Docker",
+            "React",
+            "Next.JS",
+            "Node.JS",
+            "SEO",
+            "TCP/IP",
+            "Docker Swarm"
+          ]
+        },
+        {
+          "id": "r8c3y47vykausqrgmzwg5pur",
+          "hidden": false,
+          "icon": "",
+          "name": "Technical Support & Troubleshooting",
+          "proficiency": "Intermediate",
+          "level": 0,
+          "keywords": [
+            "Remote Desktop/RDP",
+            "Software Installation & Updates",
+            "Hardware/Software Reconfiguration",
+            "User Onboarding"
+          ]
+        },
+        {
+          "id": "b5l75aseexqv17quvqgh73fe",
+          "hidden": false,
+          "icon": "",
+          "name": "Tools",
+          "proficiency": "Intermediate",
+          "level": 0,
+          "keywords": [
+            "Git",
+            "Docker",
+            "Vite",
+            "Cloudflare",
+            "ManageEngine",
+            "n8n",
+            "SearXNG",
+            "Opencode/Gemini CLI"
+          ]
+        },
+        {
+          "id": "puezdtqalbwykot5uo3abtpl",
+          "hidden": false,
+          "icon": "",
+          "name": "Operating Systems",
+          "proficiency": "Intermediate",
+          "level": 0,
+          "keywords": [
+            "Arch Linux",
+            "Debian",
+            "Windows 10/11",
+            "MacOS",
+            "Windows Server",
+            "ChromeOS"
+          ]
+        },
+        {
+          "id": "xsmt6zfnby4s22zmm3uk9ke3",
+          "hidden": false,
+          "icon": "",
+          "name": "AI & LLMs",
+          "proficiency": "Intermediate",
+          "level": 0,
+          "keywords": [
+            "GPT",
+            "Claude",
+            "Gemini",
+            "Prompt Engineering",
+            "OpenAI",
+            "Ollama",
+            "OpenWebUI"
+          ]
+        }
+      ]
+    },
+    "languages": {
+      "title": "Languages",
+      "columns": 1,
+      "hidden": false,
+      "items": []
+    },
+    "interests": {
+      "title": "Interests",
+      "columns": 1,
+      "hidden": false,
+      "items": []
+    },
+    "awards": {
+      "title": "Awards",
+      "columns": 1,
+      "hidden": false,
+      "items": []
+    },
+    "certifications": {
+      "title": "Certifications",
+      "columns": 1,
+      "hidden": false,
+      "items": [
+        {
+          "id": "b8xntdr7fh9egngvqghdabgf",
+          "hidden": false,
+          "title": "PCEP-30-02",
+          "issuer": "Python Institute",
+          "date": "August 12, 2024",
+          "website": {
+            "url": "",
+            "label": ""
+          },
+          "description": ""
+        }
+      ]
+    },
+    "publications": {
+      "title": "Publications",
+      "columns": 1,
+      "hidden": false,
+      "items": []
+    },
+    "volunteer": {
+      "title": "Volunteering",
+      "columns": 1,
+      "hidden": false,
+      "items": []
+    },
+    "references": {
+      "title": "References",
+      "columns": 1,
+      "hidden": true,
+      "items": [
+        {
+          "id": "f2sv5z0cce6ztjl87yuk8fak",
+          "hidden": false,
+          "name": "Available upon request",
+          "position": "",
+          "website": {
+            "url": "",
+            "label": ""
+          },
+          "phone": "",
+          "description": ""
+        }
+      ]
+    }
+  },
+  "customSections": [],
+  "metadata": {
+    "template": "chikorita",
+    "layout": {
+      "sidebarWidth": 35,
+      "pages": [
+        {
+          "fullWidth": false,
+          "main": [
+            "summary",
+            "experience",
+            "projects",
+            "references",
+            "interests",
+            "languages",
+            "education",
+            "awards",
+            "volunteer",
+            "publications"
+          ],
+          "sidebar": [
+            "certifications",
+            "profiles",
+            "skills"
+          ]
+        }
+      ]
+    },
+    "css": {
+      "enabled": false,
+      "value": "* {\n\toutline: 1px solid #000;\n\toutline-offset: 4px;\n}"
+    },
+    "page": {
+      "gapX": 4,
+      "gapY": 6,
+      "marginX": 12,
+      "marginY": 12,
+      "format": "a4",
+      "locale": "en-US",
+      "hideIcons": false
+    },
+    "design": {
+      "level": {
+        "icon": "star",
+        "type": "circle"
+      },
+      "colors": {
+        "primary": "rgba(8, 145, 178, 1)",
+        "text": "rgba(0, 0, 0, 1)",
+        "background": "rgba(255, 255, 255, 1)"
+      }
+    },
+    "typography": {
+      "body": {
+        "fontFamily": "IBM Plex Sans",
+        "fontWeights": [
+          "400"
+        ],
+        "fontSize": 9.9375,
+        "lineHeight": 1.75
+      },
+      "heading": {
+        "fontFamily": "IBM Plex Sans",
+        "fontWeights": [
+          "600"
+        ],
+        "fontSize": 12.9375,
+        "lineHeight": 1.75
+      }
+    },
+    "notes": ""
+  }
+}

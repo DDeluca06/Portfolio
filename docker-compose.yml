@@ -11,8 +11,15 @@ services:
       - "3000:51337"
     environment:
       - NODE_ENV=production
+      - INFLUX_URL=http://influxdb:8086
+      - INFLUX_TOKEN=${INFLUX_ADMIN_TOKEN}
+      - INFLUX_ORG=homelab
+      - INFLUX_BUCKET=metrics
+      - DOCKER_HOST=tcp://docker-proxy:2375
     networks:
       - web
+      - backend
+      - docker-proxy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.portfolio.rule=Host(`your-domain.com`)"
@@ -37,6 +44,97 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: resufolio-influxdb
+    restart: unless-stopped
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_ADMIN_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUX_ADMIN_TOKEN}
+      - DOCKER_INFLUXDB_INIT_ORG=homelab
+      - DOCKER_INFLUXDB_INIT_BUCKET=metrics
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - ./influxdb/retention:/docker-entrypoint-initdb.d
+    networks:
+      - backend
+    ports:
+      - "8086:8086"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Docker Socket Proxy - Secure access to Docker API
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: resufolio-docker-proxy
+    restart: unless-stopped
+    environment:
+      # Enable read-only access to resources
+      - CONTAINERS=1
+      - SERVICES=1
+      - NODES=1
+      - NETWORKS=1
+      - TASKS=1
+      - INFO=1
+      - VERSION=1
+      # Explicitly disable write operations for security
+      - POST=0
+      - DELETE=0
+      - PUT=0
+      - PATCH=0
+      - BUILD=0
+      - COMMIT=0
+      - CONFIGS=0
+      - DISTRIBUTION=0
+      - EXEC=0
+      - GRPC=0
+      - IMAGES=0
+      - PLUGINS=0
+      - SECRETS=0
+      - SESSION=0
+      - SWARM=0
+      - SYSTEM=0
+      - VOLUMES=0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - docker-proxy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+    # Security: restrict to internal network only
+    expose:
+      - "2375"
+    # No external ports exposed - only accessible via docker-proxy network
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+        reservations:
+          memory: 32M
+
 networks:
   web:
     external: true
+  backend:
+    driver: bridge
+  docker-proxy:
+    internal: true
+    driver: bridge
+
+volumes:
+  influxdb-data:
+    driver: local
