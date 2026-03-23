@@ -76,11 +76,17 @@ jobs:
           STATS_API_KEY: test-api-key-ci
           DOCKER_HOST: tcp://localhost:2375
 
+      - name: Verify build output
+        run: |
+          ls -la build/ || echo "Build directory not found"
+          ls -la build/api/ 2>/dev/null || echo "No API routes in build"
+
       - name: Start SvelteKit preview server (frontend)
         run: |
-          bun run preview -- --port 3000 &
+          echo "Starting SvelteKit preview on port 3000..."
+          npx vite preview --port 3000 --host &
           echo $! > sveltekit.pid
-          sleep 8
+          sleep 10
         env:
           STATS_API_KEY: test-api-key-ci
           STATS_API_URL: http://localhost:3001
@@ -96,20 +102,17 @@ jobs:
             sleep 1
           done
           
-          # Debug: Check if SvelteKit process is running
-          if [ -f sveltekit.pid ]; then
-            echo "SvelteKit PID: $(cat sveltekit.pid)"
-            ps aux | grep $(cat sveltekit.pid) | grep -v grep || echo "SvelteKit process not found"
-          fi
+          # Debug: Check processes
+          echo "Running processes on port 3000:"
+          lsof -i :3000 2>/dev/null || netstat -tlnp 2>/dev/null | grep 3000 || echo "No process on port 3000"
           
-          # Wait for SvelteKit with longer timeout and debug output
-          for i in {1..45}; do
-            echo "Attempt $i: Checking SvelteKit on port 3000..."
+          # Wait for SvelteKit
+          for i in {1..60}; do
             if curl -s http://localhost:3000/api/health > /dev/null; then
               echo "SvelteKit server is ready"
               exit 0
             fi
-            sleep 2
+            sleep 1
           done
           echo "Servers failed to start"
           exit 1
