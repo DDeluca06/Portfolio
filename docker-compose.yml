@@ -74,6 +74,36 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # Stats API - System metrics collection
+  stats-api:
+    build:
+      context: ./services/stats-api
+      dockerfile: Dockerfile
+    container_name: resufolio-stats-api
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - HOST=0.0.0.0
+      - STATS_API_KEY=${STATS_API_KEY}
+      - SERVER_NAME=${SERVER_NAME:-Homelab Server}
+    networks:
+      - backend
+      - web
+    ports:
+      - "3001:3001"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   # Docker Socket Proxy - Secure access to Docker API
   docker-proxy:
     image: tecnativa/docker-socket-proxy:latest

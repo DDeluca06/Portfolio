@@ -1,0 +1,294 @@
+version: '3.8'
+
+services:
+  # Main Portfolio Application
+  portfolio:
+    image: resufolio:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+        monitor: 60s
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: pause
+        order: stop-first
+        monitor: 60s
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+      placement:
+        constraints:
+          - node.labels.resufolio.portfolio == true
+      labels:
+        # Traefik routing labels
+        - "traefik.enable=true"
+        - "traefik.http.routers.portfolio.rule=Host(`${DOMAIN}`)"
+        - "traefik.http.routers.portfolio.entrypoints=websecure"
+        - "traefik.http.routers.portfolio.tls=true"
+        - "traefik.http.routers.portfolio.tls.certresolver=letsencrypt"
+        - "traefik.http.services.portfolio.loadbalancer.server.port=51337"
+        - "traefik.http.services.portfolio.loadbalancer.healthcheck.path=/"
+        - "traefik.http.services.portfolio.loadbalancer.healthcheck.interval=10s"
+        - "traefik.http.services.portfolio.loadbalancer.healthcheck.timeout=3s"
+        # Security headers
+        - "traefik.http.middlewares.portfolio-headers.headers.customFrameOptionsValue=SAMEORIGIN"
+        - "traefik.http.middlewares.portfolio-headers.headers.contentTypeNosniff=true"
+        - "traefik.http.middlewares.portfolio-headers.headers.browserXssFilter=true"
+        - "traefik.http.routers.portfolio.middlewares=portfolio-headers@docker"
+    environment:
+      - NODE_ENV=production
+      - INFLUX_URL=http://influxdb:8086
+      - INFLUX_ORG=homelab
+      - INFLUX_BUCKET=metrics
+      - DOCKER_HOST=tcp://docker-proxy:2375
+      - STATS_API_URL=http://stats-api:3000
+    secrets:
+      - influx_token
+      - stats_api_key
+    networks:
+      - web
+      - backend
+      - docker-proxy
+    healthcheck:
+      test: ["CMD", "bun", "-e", "const r=await fetch('http://localhost:51337');process.exit(r.ok?0:1)"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service"
+        tag: "{{.Name}}"
+
+  # Stats API Service
+  stats-api:
+    image: resufolio-stats-api:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+        monitor: 60s
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: pause
+        order: stop-first
+        monitor: 60s
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+      placement:
+        constraints:
+          - node.labels.resufolio.stats-api == true
+      labels:
+        # Internal service - no external access via Traefik
+        - "traefik.enable=false"
+    environment:
+      - NODE_ENV=production
+      - DOCKER_HOST=tcp://docker-proxy:2375
+      - INFLUX_URL=http://influxdb:8086
+      - INFLUX_ORG=homelab
+      - INFLUX_BUCKET=metrics
+      - PORT=3000
+      - RATE_LIMIT_READS_PER_MINUTE=100
+      - RATE_LIMIT_WRITES_PER_MINUTE=20
+      - ENABLE_HSTS=true
+      - HSTS_MAX_AGE=31536000
+    secrets:
+      - source: influx_token
+        target: INFLUX_TOKEN
+      - source: stats_api_key
+        target: STATS_API_KEY
+    networks:
+      - backend
+      - docker-proxy
+    healthcheck:
+      test: ["CMD", "bun", "-e", "const r=await fetch('http://localhost:3000/api/health');process.exit(r.ok?0:1)"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service"
+        tag: "{{.Name}}"
+
+  # Docker Socket Proxy - Secure access to Docker API
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      update_config:
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        order: start-first
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
+        reservations:
+          cpus: '0.05'
+          memory: 32M
+      placement:
+        constraints:
+          - node.labels.resufolio.docker-proxy == true
+      labels:
+        - "traefik.enable=false"
+    environment:
+      # Enable read-only access to resources
+      - CONTAINERS=1
+      - SERVICES=1
+      - NODES=1
+      - NETWORKS=1
+      - TASKS=1
+      - INFO=1
+      - VERSION=1
+      # Explicitly disable write operations for security
+      - POST=0
+      - DELETE=0
+      - PUT=0
+      - PATCH=0
+      - BUILD=0
+      - COMMIT=0
+      - CONFIGS=0
+      - DISTRIBUTION=0
+      - EXEC=0
+      - GRPC=0
+      - IMAGES=0
+      - PLUGINS=0
+      - SECRETS=0
+      - SESSION=0
+      - SWARM=0
+      - SYSTEM=0
+      - VOLUMES=0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - docker-proxy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+        tag: "{{.Name}}"
+
+  # InfluxDB for metrics storage
+  influxdb:
+    image: influxdb:2.7-alpine
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+      placement:
+        constraints:
+          - node.labels.resufolio.influxdb == true
+      labels:
+        - "traefik.enable=false"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME_FILE=/run/secrets/influx_username
+      - DOCKER_INFLUXDB_INIT_PASSWORD_FILE=/run/secrets/influx_password
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN_FILE=/run/secrets/influx_token
+      - DOCKER_INFLUXDB_INIT_ORG=homelab
+      - DOCKER_INFLUXDB_INIT_BUCKET=metrics
+    secrets:
+      - influx_username
+      - influx_password
+      - influx_token
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - ./influxdb/retention:/docker-entrypoint-initdb.d:ro
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "{{.Name}}"
+
+networks:
+  web:
+    external: true
+    name: traefik-web
+  backend:
+    driver: overlay
+    attachable: true
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+  docker-proxy:
+    driver: overlay
+    attachable: false
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.29.0.0/16
+
+volumes:
+  influxdb-data:
+    driver: local
+
+secrets:
+  influx_username:
+    external: true
+    name: resufolio_influx_username
+  influx_password:
+    external: true
+    name: resufolio_influx_password
+  influx_token:
+    external: true
+    name: resufolio_influx_token
+  stats_api_key:
+    external: true
+    name: resufolio_stats_api_key
