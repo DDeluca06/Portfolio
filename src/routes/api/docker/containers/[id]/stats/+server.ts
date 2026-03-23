@@ -95,7 +95,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       },
     );
   } catch (error) {
-    console.error("Error fetching container stats:", error);
+    console.error("Detailed error fetching container stats:", error);
 
     // Check if container not found
     const errorMessage =
@@ -107,7 +107,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
         error: isNotFound
           ? "Container not found"
           : "Failed to fetch container stats",
-        message: errorMessage,
         containerId: id,
         requestId: locals.requestId,
         timestamp: new Date().toISOString(),

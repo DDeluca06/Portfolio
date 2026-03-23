@@ -145,12 +145,11 @@ export const GET: RequestHandler = async ({ locals }) => {
       },
     );
   } catch (error) {
-    console.error("Error fetching nodes:", error);
+    console.error("Detailed error fetching nodes:", error);
 
     return new Response(
       JSON.stringify({
         error: "Failed to fetch nodes",
-        message: error instanceof Error ? error.message : "Unknown error",
         requestId: locals.requestId,
         timestamp: new Date().toISOString(),
       }),

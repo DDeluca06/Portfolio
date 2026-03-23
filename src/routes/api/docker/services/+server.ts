@@ -181,12 +181,11 @@ export const GET: RequestHandler = async ({ locals, url }) => {
       },
     );
   } catch (error) {
-    console.error("Error fetching services:", error);
+    console.error("Detailed error fetching services:", error);
 
     return new Response(
       JSON.stringify({
         error: "Failed to fetch services",
-        message: error instanceof Error ? error.message : "Unknown error",
         requestId: locals.requestId,
         timestamp: new Date().toISOString(),
       }),

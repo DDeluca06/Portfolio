@@ -89,12 +89,11 @@ export const GET: RequestHandler = async ({ locals }) => {
       },
     );
   } catch (error) {
-    console.error("Error fetching containers:", error);
+    console.error("Detailed error fetching containers:", error);
 
     return new Response(
       JSON.stringify({
         error: "Failed to fetch containers",
-        message: error instanceof Error ? error.message : "Unknown error",
         requestId: locals.requestId,
         timestamp: new Date().toISOString(),
       }),

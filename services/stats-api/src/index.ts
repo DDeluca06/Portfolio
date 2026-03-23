@@ -1,6 +1,6 @@
 /**
  * Stats API Server
- * 
+ *
  * Hono-based HTTP server for system statistics collection
  */
 
@@ -18,7 +18,27 @@ const app = new Hono();
 
 // Middleware
 app.use(logger());
-app.use(cors());
+
+// CORS configuration with explicit allowed origins
+const allowedOrigins =
+  process.env.ALLOWED_ORIGINS?.split(",").map((o) => o.trim()) || [];
+const corsConfig =
+  allowedOrigins.length > 0
+    ? {
+        origin: allowedOrigins,
+        allowMethods: ["GET", "POST", "OPTIONS"],
+        allowHeaders: ["Authorization", "Content-Type"],
+      }
+    : {
+        origin:
+          process.env.NODE_ENV === "development"
+            ? ["http://localhost:3000", "http://localhost:5173"]
+            : [],
+        allowMethods: ["GET", "POST", "OPTIONS"],
+        allowHeaders: ["Authorization", "Content-Type"],
+      };
+app.use(cors(corsConfig));
+
 app.use(prettyJSON());
 
 // Authentication middleware for protected routes
@@ -41,42 +61,51 @@ app.get("/", (c) => {
         "GET /health": "Basic health check",
         "GET /health/detailed": "Detailed health with system info",
         "GET /health/ready": "Readiness probe",
-        "GET /health/live": "Liveness probe"
+        "GET /health/live": "Liveness probe",
       },
       stats: {
         "GET /api/stats/current": "Current CPU, RAM, Disk, Network stats",
         "GET /api/stats/system": "Static system information",
         "GET /api/stats/servers": "List configured servers",
-        "GET /api/stats/servers/:id": "Stats for specific server"
-      }
-    }
+        "GET /api/stats/servers/:id": "Stats for specific server",
+      },
+    },
   });
 });
 
 // Error handling
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
-    return c.json({
-      success: false,
-      error: err.message,
-      status: err.status
-    }, err.status);
+    return c.json(
+      {
+        success: false,
+        error: err.message,
+        status: err.status,
+      },
+      err.status,
+    );
   }
-  
+
   console.error("Unhandled error:", err);
-  return c.json({
-    success: false,
-    error: "Internal server error"
-  }, 500);
+  return c.json(
+    {
+      success: false,
+      error: "Internal server error",
+    },
+    500,
+  );
 });
 
 // 404 handler
 app.notFound((c) => {
-  return c.json({
-    success: false,
-    error: "Not found",
-    path: c.req.path
-  }, 404);
+  return c.json(
+    {
+      success: false,
+      error: "Not found",
+      path: c.req.path,
+    },
+    404,
+  );
 });
 
 // Start server
@@ -88,7 +117,7 @@ console.log(`Starting stats-api server on ${HOST}:${PORT}...`);
 Bun.serve({
   port: PORT,
   hostname: HOST,
-  fetch: app.fetch
+  fetch: app.fetch,
 });
 
 console.log(`Stats API server running at http://${HOST}:${PORT}`);
