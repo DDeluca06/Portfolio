@@ -57,7 +57,8 @@
     };
   }
 
-  export let refreshInterval: number = 30000;
+  const DEFAULT_REFRESH_INTERVAL = parseInt(import.meta.env.REFRESH_INTERVAL || '30000', 10);
+  export let refreshInterval: number = DEFAULT_REFRESH_INTERVAL;
 
   let nodes: Node[] = [];
   let services: Service[] = [];

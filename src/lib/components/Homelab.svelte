@@ -4,6 +4,8 @@
   import { RealTimeStats } from './stats';
   import { ContainerList, SwarmOverview } from './docker';
   import { Server, Network, Database, Activity, BarChart3, Box, Layers } from 'lucide-svelte';
+
+  const REFRESH_INTERVAL = parseInt(import.meta.env.REFRESH_INTERVAL || '30000', 10);
   
   let activeServer = $state<string | null>(null);
   let activeTab = $state<'overview' | 'containers' | 'swarm'>('overview');
@@ -184,20 +186,20 @@
                 <Box class="w-5 h-5 text-cyan-400" />
                 Active Containers
               </h3>
-              <ContainerList refreshInterval={30000} showFilters={true} maxHeight="400px" />
+              <ContainerList refreshInterval={REFRESH_INTERVAL} showFilters={true} maxHeight="400px" />
             </div>
             <div>
               <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Layers class="w-5 h-5 text-teal-400" />
                 Swarm Status
               </h3>
-              <SwarmOverview refreshInterval={30000} />
+              <SwarmOverview refreshInterval={REFRESH_INTERVAL} />
             </div>
           </div>
         {:else if activeTab === 'containers'}
-          <ContainerList refreshInterval={30000} showFilters={true} maxHeight="600px" />
+          <ContainerList refreshInterval={REFRESH_INTERVAL} showFilters={true} maxHeight="600px" />
         {:else if activeTab === 'swarm'}
-          <SwarmOverview refreshInterval={30000} />
+          <SwarmOverview refreshInterval={REFRESH_INTERVAL} />
         {/if}
       </div>
     </div>

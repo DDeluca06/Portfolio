@@ -38,11 +38,13 @@
     }
   }
   
+  const REFRESH_INTERVAL = parseInt(import.meta.env.REFRESH_INTERVAL || '30000', 10);
+
   onMount(() => {
     fetchStats();
     
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchStats, 30000);
+    // Refresh every 30 seconds (configurable via REFRESH_INTERVAL env var)
+    const interval = setInterval(fetchStats, REFRESH_INTERVAL);
     return () => clearInterval(interval);
   });
   

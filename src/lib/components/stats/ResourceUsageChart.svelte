@@ -13,11 +13,13 @@
     height?: number;
   }
 
+  const DEFAULT_REFRESH_INTERVAL = parseInt(import.meta.env.REFRESH_INTERVAL || '30000', 10);
+
   let { 
     measurement = 'cpu', 
     title = 'Resource Usage',
     serverId,
-    refreshInterval = 30000,
+    refreshInterval = DEFAULT_REFRESH_INTERVAL,
     height = 200
   }: Props = $props();
 
@@ -77,7 +79,7 @@
       });
       
       if (serverId) {
-        params.set('serverId', serverId);
+        params.set('server_id', serverId);
       }
 
       const response = await fetch(`/api/history?${params.toString()}`);

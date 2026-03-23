@@ -15,9 +15,11 @@
     expanded?: boolean;
   }
 
+  const DEFAULT_REFRESH_INTERVAL = parseInt(import.meta.env.REFRESH_INTERVAL || '30000', 10);
+
   let { 
     apiKey = '', 
-    refreshInterval = 5000,
+    refreshInterval = DEFAULT_REFRESH_INTERVAL,
     expanded = false
   }: Props = $props();
 
@@ -216,14 +218,14 @@
             measurement="cpu"
             title="CPU Usage History"
             serverId={selectedServer || undefined}
-            refreshInterval={30000}
+            refreshInterval={DEFAULT_REFRESH_INTERVAL}
           />
           
           <ResourceUsageChart
             measurement="memory"
             title="Memory Usage History"
             serverId={selectedServer || undefined}
-            refreshInterval={30000}
+            refreshInterval={DEFAULT_REFRESH_INTERVAL}
           />
         </div>
 

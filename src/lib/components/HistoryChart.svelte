@@ -19,6 +19,7 @@
     { value: '30d', label: '30 Days', window: '6h' }
   ];
   
+  const REFRESH_INTERVAL = parseInt(import.meta.env.REFRESH_INTERVAL || '30000', 10);
   let refreshInterval: ReturnType<typeof setInterval>;
   
   async function fetchHistory() {
@@ -63,8 +64,8 @@
   onMount(() => {
     fetchHistory();
     
-    // Refresh every 30 seconds
-    refreshInterval = setInterval(fetchHistory, 30000);
+    // Refresh every 30 seconds (configurable via REFRESH_INTERVAL env var)
+    refreshInterval = setInterval(fetchHistory, REFRESH_INTERVAL);
   });
   
   onDestroy(() => {
