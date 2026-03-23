@@ -11,5 +11,5 @@ coverageThreshold = 0.8
 # Test timeout (milliseconds)
 timeout = 30000
 
-# Test reporter
-reporter = "spec"
+# Test reporter (use default spec reporter)
+# Note: Bun's reporter config doesn't accept string directly
