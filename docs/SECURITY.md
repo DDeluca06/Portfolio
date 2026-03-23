@@ -1,5 +1,7 @@
 # Security Documentation
 
+> **SECURITY ADVISORY (2025-03-23):** A hard-coded API key was previously committed to the repository. This key has been rotated and is no longer valid. If you were using the old key (`fec508045695c85fe478f79f73f946e75c5042d71644a6ecd2c810040b9003b8`), you must generate a new one immediately. See [API Key Configuration](#api-key-configuration) below.
+
 This document describes the security architecture implemented for the Resufolio Stats API.
 
 ## Table of Contents
@@ -33,24 +35,29 @@ All API endpoints (except health check) require authentication via Bearer token 
 Authorization: Bearer <your-api-key>
 ```
 
-### Configuration
+### API Key Configuration
 
 1. Copy `.env.example` to `.env`:
+
    ```bash
    cp .env.example .env
    ```
 
-2. Generate a secure API key:
+2. Generate a secure API key (hex format, 64 characters):
+
    ```bash
-   openssl rand -base64 32
+   openssl rand -hex 32
    ```
 
 3. Add to `.env`:
+
    ```env
-   STATS_API_KEY=your-secure-api-key
+   STATS_API_KEY=your-generated-key-here
    ```
 
 4. **Never commit `.env` to version control!**
+   - `.env` is already in `.gitignore`
+   - Always verify with: `git ls-files | grep "\.env"` (should only show `.env.example`)
 
 ### Unauthenticated Requests
 
@@ -78,11 +85,11 @@ Current implementation uses a single API key for all stats endpoints. Future enh
 
 ### Protected Endpoints
 
-| Endpoint | Authentication Required |
-|----------|------------------------|
-| `/api/health` | No |
-| `/api/stats` | Yes |
-| `/api/docker` | Yes |
+| Endpoint      | Authentication Required |
+| ------------- | ----------------------- |
+| `/api/health` | No                      |
+| `/api/stats`  | Yes                     |
+| `/api/docker` | Yes                     |
 
 ## Rate Limiting
 
@@ -123,6 +130,7 @@ When limits are exceeded:
 Status: **429 Too Many Requests**
 
 Headers:
+
 ```http
 Retry-After: 45
 ```
@@ -160,15 +168,15 @@ Status: **403 Forbidden**
 
 ### Implemented Headers
 
-| Header | Value | Purpose |
-|--------|-------|---------|
-| `X-Content-Type-Options` | `nosniff` | Prevent MIME sniffing |
-| `X-Frame-Options` | `DENY` | Prevent clickjacking |
-| `X-XSS-Protection` | `1; mode=block` | XSS protection |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` | Referrer control |
-| `Permissions-Policy` | Various restrictions | Feature policy |
-| `Strict-Transport-Security` | `max-age=31536000` | HSTS (if enabled) |
-| `X-Request-ID` | UUID | Request tracking |
+| Header                      | Value                             | Purpose               |
+| --------------------------- | --------------------------------- | --------------------- |
+| `X-Content-Type-Options`    | `nosniff`                         | Prevent MIME sniffing |
+| `X-Frame-Options`           | `DENY`                            | Prevent clickjacking  |
+| `X-XSS-Protection`          | `1; mode=block`                   | XSS protection        |
+| `Referrer-Policy`           | `strict-origin-when-cross-origin` | Referrer control      |
+| `Permissions-Policy`        | Various restrictions              | Feature policy        |
+| `Strict-Transport-Security` | `max-age=31536000`                | HSTS (if enabled)     |
+| `X-Request-ID`              | UUID                              | Request tracking      |
 
 ### HSTS Configuration
 
@@ -203,7 +211,7 @@ HSTS_MAX_AGE=31536000
 
 ### Security Best Practices
 
-1. **Generate strong API keys**: Use `openssl rand -base64 32`
+1. **Generate strong API keys**: Use `openssl rand -hex 32`
 2. **Rotate keys regularly**: Set a calendar reminder
 3. **Use environment variables**: Never hardcode secrets
 4. **Restrict origins**: Only allow your actual domain(s)
@@ -220,6 +228,7 @@ GET /api/health
 No authentication required. Returns service status.
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -238,6 +247,7 @@ Authorization: Bearer <api-key>
 Returns CPU, memory, disk, and OS information.
 
 **Response:**
+
 ```json
 {
   "timestamp": "2024-01-15T10:30:00Z",
@@ -259,6 +269,7 @@ Authorization: Bearer <api-key>
 Returns Docker container and system information.
 
 **Response:**
+
 ```json
 {
   "timestamp": "2024-01-15T10:30:00Z",
@@ -273,23 +284,27 @@ Returns Docker container and system information.
 ### Manual Testing
 
 1. **Test Health Check (No Auth):**
+
    ```bash
    curl http://localhost:5173/api/health
    ```
 
 2. **Test Without Authentication:**
+
    ```bash
    curl http://localhost:5173/api/stats
    # Should return 401
    ```
 
 3. **Test With Authentication:**
+
    ```bash
    curl -H "Authorization: Bearer $STATS_API_KEY" \
         http://localhost:5173/api/stats
    ```
 
 4. **Test Rate Limiting:**
+
    ```bash
    for i in {1..105}; do
      curl -H "Authorization: Bearer $STATS_API_KEY" \
