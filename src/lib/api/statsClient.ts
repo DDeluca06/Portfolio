@@ -91,6 +91,46 @@ export class StatsAPI {
     
     return response.json();
   }
+
+  /**
+   * Get current stats from all servers
+   */
+  async getCurrentStats(): Promise<StatsData> {
+    const response = await this.fetch('/stats/current');
+    
+    if (response.status === 401) {
+      throw new Error('Unauthorized: Invalid or missing API key');
+    }
+    
+    if (response.status === 429) {
+      const retryAfter = response.headers.get('Retry-After');
+      throw new Error(`Rate limit exceeded. Retry after ${retryAfter} seconds`);
+    }
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch current stats: ${response.status}`);
+    }
+    
+    return response.json();
+  }
+
+  /**
+   * Get list of monitored servers
+   */
+  async getServers(): Promise<ServerInfo[]> {
+    const response = await this.fetch('/stats/servers');
+    
+    if (response.status === 401) {
+      throw new Error('Unauthorized: Invalid or missing API key');
+    }
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch servers: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.servers || [];
+  }
 }
 
 // Type definitions
@@ -122,6 +162,12 @@ export interface SystemStats {
     release: string;
     hostname: string;
     uptime: number;
+  };
+  network?: {
+    rxSec: number;
+    txSec: number;
+    rxTotal: number;
+    txTotal: number;
   };
 }
 
@@ -157,6 +203,29 @@ export interface DockerStats {
     }>;
     created: string;
   }>;
+}
+
+export interface ServerInfo {
+  id: string;
+  name: string;
+  hostname: string;
+  ip: string;
+  role: 'manager' | 'worker' | 'edge' | 'storage';
+  status: 'online' | 'offline' | 'maintenance';
+  stats?: SystemStats;
+  lastSeen: string;
+}
+
+export interface StatsData {
+  servers: ServerInfo[];
+  timestamp: string;
+  global: {
+    totalCpu: number;
+    totalMemory: number;
+    totalDisk: number;
+    activeServers: number;
+    totalContainers: number;
+  };
 }
 
 /**

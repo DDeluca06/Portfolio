@@ -1,9 +1,12 @@
 <script lang="ts">
   import { homelabData } from '$lib/data/homelabData';
   import ServerCard from './ServerCard.svelte';
-  import { Server, Network, Database, Activity } from 'lucide-svelte';
+  import { RealTimeStats } from './stats';
+  import { ContainerList, SwarmOverview } from './docker';
+  import { Server, Network, Database, Activity, BarChart3, Box, Layers } from 'lucide-svelte';
   
   let activeServer = $state<string | null>(null);
+  let activeTab = $state<'overview' | 'containers' | 'swarm'>('overview');
 </script>
 
 <section id="homelab" class="py-20 px-4 sm:px-6 lg:px-8">
@@ -124,5 +127,79 @@
         <p>Click on a server node above to view detailed configuration</p>
       </div>
     {/if}
+
+    <!-- Real-Time Stats Section -->
+    <div class="mt-16">
+      <RealTimeStats expanded={true} />
+    </div>
+
+    <!-- Docker Dashboard Section -->
+    <div class="mt-16">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-teal-500/10">
+            <Box class="w-6 h-6 text-teal-400" />
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white">Docker Dashboard</h2>
+            <p class="text-sm text-gray-400">Container and Swarm monitoring</p>
+          </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="flex items-center gap-2 bg-dark-800/50 rounded-lg p-1">
+          <button
+            type="button"
+            onclick={() => activeTab = 'overview'}
+            class="px-4 py-2 rounded-md text-sm font-medium transition-all {activeTab === 'overview' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400 hover:text-white'}"
+          >
+            <BarChart3 class="w-4 h-4 inline mr-2" />
+            Overview
+          </button>
+          <button
+            type="button"
+            onclick={() => activeTab = 'containers'}
+            class="px-4 py-2 rounded-md text-sm font-medium transition-all {activeTab === 'containers' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400 hover:text-white'}"
+          >
+            <Box class="w-4 h-4 inline mr-2" />
+            Containers
+          </button>
+          <button
+            type="button"
+            onclick={() => activeTab = 'swarm'}
+            class="px-4 py-2 rounded-md text-sm font-medium transition-all {activeTab === 'swarm' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400 hover:text-white'}"
+          >
+            <Layers class="w-4 h-4 inline mr-2" />
+            Swarm
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="glass rounded-xl p-6">
+        {#if activeTab === 'overview'}
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Box class="w-5 h-5 text-cyan-400" />
+                Active Containers
+              </h3>
+              <ContainerList refreshInterval={30000} showFilters={true} maxHeight="400px" />
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Layers class="w-5 h-5 text-teal-400" />
+                Swarm Status
+              </h3>
+              <SwarmOverview refreshInterval={30000} />
+            </div>
+          </div>
+        {:else if activeTab === 'containers'}
+          <ContainerList refreshInterval={30000} showFilters={true} maxHeight="600px" />
+        {:else if activeTab === 'swarm'}
+          <SwarmOverview refreshInterval={30000} />
+        {/if}
+      </div>
+    </div>
   </div>
 </section>

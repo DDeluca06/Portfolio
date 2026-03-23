@@ -9,6 +9,7 @@
     { label: 'Skills', href: '#skills' },
     { label: 'Experience', href: '#experience' },
     { label: 'Homelab', href: '#homelab' },
+    { label: 'Live Stats', href: '#live-stats' },
     { label: 'Contact', href: '#contact' }
   ];
   
