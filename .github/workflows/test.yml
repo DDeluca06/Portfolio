@@ -1,0 +1,245 @@
+name: Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      docker-proxy:
+        image: tecnativa/docker-socket-proxy:latest
+        env:
+          CONTAINERS: 1
+          INFO: 1
+          NETWORKS: 1
+          NODES: 1
+          SERVICES: 1
+          SWARM: 1
+          SYSTEM: 1
+          TASKS: 1
+          VERSION: 1
+          POST: 0
+          PUT: 0
+          DELETE: 0
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock:ro
+        ports:
+          - 2375:2375
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Setup test environment
+        run: |
+          echo "STATS_API_KEY=test-api-key-ci" >> $GITHUB_ENV
+          echo "TEST_STATS_API_KEY=test-api-key-ci" >> $GITHUB_ENV
+          echo "DOCKER_HOST=tcp://localhost:2375" >> $GITHUB_ENV
+          echo "ALLOWED_ORIGINS=http://localhost:3000,http://localhost:4173" >> $GITHUB_ENV
+          echo "RATE_LIMIT_READS_PER_MINUTE=1000" >> $GITHUB_ENV
+          echo "RATE_LIMIT_WRITES_PER_MINUTE=100" >> $GITHUB_ENV
+          echo "ENABLE_HSTS=false" >> $GITHUB_ENV
+
+      - name: Type check
+        run: bun run check
+        continue-on-error: true
+
+      - name: Build application
+        run: bun run build
+        env:
+          STATS_API_KEY: test-api-key-ci
+
+      - name: Start server for integration tests
+        run: |
+          bun run preview &
+          echo $! > server.pid
+          sleep 5
+        env:
+          PORT: 3001
+          STATS_API_KEY: test-api-key-ci
+          TEST_STATS_API_KEY: test-api-key-ci
+          DOCKER_HOST: tcp://localhost:2375
+
+      - name: Wait for server
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:3001/api/health > /dev/null; then
+              echo "Server is ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server failed to start"
+          exit 1
+
+      - name: Run unit tests
+        run: bun test tests/api tests/docker
+        env:
+          TEST_API_URL: http://localhost:3001
+          TEST_STATS_API_KEY: test-api-key-ci
+          DOCKER_HOST: tcp://localhost:2375
+
+      - name: Run integration tests
+        run: bun test tests/integration
+        env:
+          TEST_API_URL: http://localhost:3001
+          TEST_STATS_API_KEY: test-api-key-ci
+          DOCKER_HOST: tcp://localhost:2375
+          SKIP_RATE_LIMIT_TEST: true
+
+      - name: Run security tests
+        run: bun test tests/security
+        env:
+          TEST_API_URL: http://localhost:3001
+          TEST_STATS_API_KEY: test-api-key-ci
+          DOCKER_HOST: tcp://localhost:2375
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) || true
+            rm server.pid
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            test-results/
+            coverage/
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install Playwright
+        run: |
+          bunx playwright install chromium
+          bunx playwright install-deps chromium
+
+      - name: Build application
+        run: bun run build
+        env:
+          STATS_API_KEY: test-api-key-e2e
+
+      - name: Run Playwright tests
+        run: bunx playwright test tests/e2e
+        env:
+          TEST_BASE_URL: http://localhost:4173
+          TEST_API_URL: http://localhost:4173
+          TEST_STATS_API_KEY: test-api-key-e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+
+  performance-tests:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Setup k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Build application
+        run: bun run build
+        env:
+          STATS_API_KEY: test-api-key-perf
+
+      - name: Start server
+        run: |
+          bun run preview &
+          sleep 5
+        env:
+          PORT: 3001
+          STATS_API_KEY: test-api-key-perf
+
+      - name: Run k6 load tests
+        run: |
+          k6 run --out json=k6-results.json tests/performance/load-test.js
+        env:
+          TEST_API_URL: http://localhost:3001
+          TEST_STATS_API_KEY: test-api-key-perf
+
+      - name: Upload k6 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-results
+          path: k6-results.json
+
+  coverage:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run tests with coverage
+        run: bun test --coverage
+        env:
+          STATS_API_KEY: test-api-key-coverage
+          TEST_STATS_API_KEY: test-api-key-coverage
+        continue-on-error: true
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/

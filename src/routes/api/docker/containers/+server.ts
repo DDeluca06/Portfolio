@@ -1,5 +1,9 @@
-import type { RequestHandler } from './$types';
-import { getContainers, checkDockerConnection, type ContainerInfo } from '$lib/docker/client';
+import type { RequestHandler } from "./$types";
+import {
+  getContainers,
+  checkDockerConnection,
+  type ContainerInfo,
+} from "$lib/docker";
 
 export const prerender = false;
 
@@ -10,18 +14,18 @@ export const GET: RequestHandler = async ({ locals }) => {
     if (!connection.connected) {
       return new Response(
         JSON.stringify({
-          error: 'Docker connection failed',
+          error: "Docker connection failed",
           message: connection.error,
           requestId: locals.requestId,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         }),
         {
           status: 503,
           headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-store'
-          }
-        }
+            "Content-Type": "application/json",
+            "Cache-Control": "no-store",
+          },
+        },
       );
     }
 
@@ -32,7 +36,7 @@ export const GET: RequestHandler = async ({ locals }) => {
     const enhancedContainers = containers.map((container: ContainerInfo) => ({
       id: container.id.substring(0, 12),
       fullId: container.id,
-      names: container.names.map((name: string) => name.replace(/^\//, '')),
+      names: container.names.map((name: string) => name.replace(/^\//, "")),
       image: container.image,
       imageId: container.imageId,
       command: container.command,
@@ -43,7 +47,7 @@ export const GET: RequestHandler = async ({ locals }) => {
         ip: port.ip,
         private: port.privatePort,
         public: port.publicPort,
-        type: port.type
+        type: port.type,
       })),
       labels: container.labels,
       networkMode: container.hostConfig?.networkMode,
@@ -55,14 +59,14 @@ export const GET: RequestHandler = async ({ locals }) => {
         driver: mount.driver,
         mode: mount.mode,
         rw: mount.rw,
-        propagation: mount.propagation
+        propagation: mount.propagation,
       })),
-      isRunning: container.state === 'running',
-      health: container.status.toLowerCase().includes('healthy') 
-        ? 'healthy' 
-        : container.status.toLowerCase().includes('unhealthy')
-          ? 'unhealthy'
-          : 'unknown'
+      isRunning: container.state === "running",
+      health: container.status.toLowerCase().includes("healthy")
+        ? "healthy"
+        : container.status.toLowerCase().includes("unhealthy")
+          ? "unhealthy"
+          : "unknown",
     }));
 
     return new Response(
@@ -71,34 +75,35 @@ export const GET: RequestHandler = async ({ locals }) => {
         requestId: locals.requestId,
         count: enhancedContainers.length,
         running: enhancedContainers.filter((c) => c.isRunning).length,
-        containers: enhancedContainers
+        containers: enhancedContainers,
       }),
       {
         status: 200,
         headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      }
+          "Content-Type": "application/json",
+          "Cache-Control":
+            "no-store, no-cache, must-revalidate, proxy-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      },
     );
   } catch (error) {
-    console.error('Error fetching containers:', error);
-    
+    console.error("Error fetching containers:", error);
+
     return new Response(
       JSON.stringify({
-        error: 'Failed to fetch containers',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        error: "Failed to fetch containers",
+        message: error instanceof Error ? error.message : "Unknown error",
         requestId: locals.requestId,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       }),
       {
         status: 500,
         headers: {
-          'Content-Type': 'application/json'
-        }
-      }
+          "Content-Type": "application/json",
+        },
+      },
     );
   }
 };

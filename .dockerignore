@@ -1,0 +1,58 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Node modules (installed in container)
+node_modules/
+npm-debug.log
+yarn-error.log
+bun.lockb
+
+# Environment files (security critical)
+.env
+.env.local
+.env.*
+!.env.example
+
+# Build outputs
+build/
+.svelte-kit/
+dist/
+coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files (not needed in context)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+*.md
+docs/
+
+# CI/CD
+.github/
+.travis.yml
+.gitlab-ci.yml
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
