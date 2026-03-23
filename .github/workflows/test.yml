@@ -41,7 +41,9 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install
+        run: |
+          bun install
+          cd services/stats-api && bun install && cd ../..
 
       - name: Setup test environment
         run: |
@@ -62,10 +64,12 @@ jobs:
         env:
           STATS_API_KEY: test-api-key-ci
 
-      - name: Start server for integration tests
+      - name: Start stats-api server for integration tests
         run: |
-          bun run preview &
-          echo $! > server.pid
+          cd services/stats-api
+          bun run src/index.ts &
+          echo $! > ../../server.pid
+          cd ../..
           sleep 5
         env:
           PORT: 3001
@@ -138,7 +142,9 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install
+        run: |
+          bun install
+          cd services/stats-api && bun install && cd ../..
 
       - name: Install Playwright
         run: |
@@ -179,7 +185,9 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install
+        run: |
+          bun install
+          cd services/stats-api && bun install && cd ../..
 
       - name: Setup k6
         run: |
@@ -194,9 +202,11 @@ jobs:
         env:
           STATS_API_KEY: test-api-key-perf
 
-      - name: Start server
+      - name: Start stats-api server
         run: |
-          bun run preview &
+          cd services/stats-api
+          bun run src/index.ts &
+          cd ../..
           sleep 5
         env:
           PORT: 3001
@@ -229,7 +239,9 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install
+        run: |
+          bun install
+          cd services/stats-api && bun install && cd ../..
 
       - name: Run tests with coverage
         run: bun test --coverage
