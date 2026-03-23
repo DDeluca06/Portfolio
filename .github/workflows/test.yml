@@ -78,11 +78,10 @@ jobs:
 
       - name: Start SvelteKit preview server (frontend)
         run: |
-          bun run preview &
+          bun run preview -- --port 3000 &
           echo $! > sveltekit.pid
-          sleep 5
+          sleep 8
         env:
-          PORT: 3000
           STATS_API_KEY: test-api-key-ci
           STATS_API_URL: http://localhost:3001
 
@@ -97,13 +96,20 @@ jobs:
             sleep 1
           done
           
-          # Wait for SvelteKit
-          for i in {1..30}; do
+          # Debug: Check if SvelteKit process is running
+          if [ -f sveltekit.pid ]; then
+            echo "SvelteKit PID: $(cat sveltekit.pid)"
+            ps aux | grep $(cat sveltekit.pid) | grep -v grep || echo "SvelteKit process not found"
+          fi
+          
+          # Wait for SvelteKit with longer timeout and debug output
+          for i in {1..45}; do
+            echo "Attempt $i: Checking SvelteKit on port 3000..."
             if curl -s http://localhost:3000/api/health > /dev/null; then
               echo "SvelteKit server is ready"
               exit 0
             fi
-            sleep 1
+            sleep 2
           done
           echo "Servers failed to start"
           exit 1
