@@ -41,11 +41,12 @@ app.use(cors(corsConfig));
 
 app.use(prettyJSON());
 
+// Health check routes (no auth required) - MUST be before auth middleware
+app.route("/health", healthRoutes);
+app.route("/api/health", healthRoutes);
+
 // Authentication middleware for protected routes
 app.use("/api/*", authMiddleware);
-
-// Health check routes (no auth required)
-app.route("/health", healthRoutes);
 
 // Stats API routes (auth required)
 app.route("/api/stats", statsRoutes);
