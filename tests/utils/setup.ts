@@ -5,7 +5,9 @@
 // Set test environment variables
 export function setupTestEnvironment(): void {
   // API configuration
-  process.env.TEST_API_URL = process.env.TEST_API_URL || 'http://localhost:3001';
+  // TEST_API_URL should point to SvelteKit app (port 3000), not stats-api directly
+  process.env.TEST_API_URL = process.env.TEST_API_URL || 'http://localhost:3000';
+  process.env.STATS_API_URL = process.env.STATS_API_URL || 'http://localhost:3001';
   process.env.TEST_STATS_API_KEY = process.env.TEST_STATS_API_KEY || 'test-api-key-for-testing-only';
   
   // Server configuration for tests

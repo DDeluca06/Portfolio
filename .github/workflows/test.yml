@@ -64,59 +64,85 @@ jobs:
         env:
           STATS_API_KEY: test-api-key-ci
 
-      - name: Start stats-api server for integration tests
+      - name: Start stats-api server (backend)
         run: |
           cd services/stats-api
           bun run src/index.ts &
-          echo $! > ../../server.pid
+          echo $! > ../../stats-api.pid
           cd ../..
-          sleep 5
+          sleep 3
         env:
           PORT: 3001
           STATS_API_KEY: test-api-key-ci
-          TEST_STATS_API_KEY: test-api-key-ci
           DOCKER_HOST: tcp://localhost:2375
 
-      - name: Wait for server
+      - name: Start SvelteKit preview server (frontend)
         run: |
+          bun run preview &
+          echo $! > sveltekit.pid
+          sleep 5
+        env:
+          PORT: 3000
+          STATS_API_KEY: test-api-key-ci
+          STATS_API_URL: http://localhost:3001
+
+      - name: Wait for servers
+        run: |
+          # Wait for stats-api
           for i in {1..30}; do
             if curl -s http://localhost:3001/api/health > /dev/null; then
-              echo "Server is ready"
+              echo "Stats API is ready"
+              break
+            fi
+            sleep 1
+          done
+          
+          # Wait for SvelteKit
+          for i in {1..30}; do
+            if curl -s http://localhost:3000/api/health > /dev/null; then
+              echo "SvelteKit server is ready"
               exit 0
             fi
             sleep 1
           done
-          echo "Server failed to start"
+          echo "Servers failed to start"
           exit 1
 
       - name: Run unit tests
         run: bun test tests/api tests/docker
         env:
-          TEST_API_URL: http://localhost:3001
+          TEST_API_URL: http://localhost:3000
           TEST_STATS_API_KEY: test-api-key-ci
+          STATS_API_URL: http://localhost:3001
           DOCKER_HOST: tcp://localhost:2375
 
       - name: Run integration tests
         run: bun test tests/integration
         env:
-          TEST_API_URL: http://localhost:3001
+          TEST_API_URL: http://localhost:3000
           TEST_STATS_API_KEY: test-api-key-ci
+          STATS_API_URL: http://localhost:3001
           DOCKER_HOST: tcp://localhost:2375
           SKIP_RATE_LIMIT_TEST: true
 
       - name: Run security tests
         run: bun test tests/security
         env:
-          TEST_API_URL: http://localhost:3001
+          TEST_API_URL: http://localhost:3000
           TEST_STATS_API_KEY: test-api-key-ci
+          STATS_API_URL: http://localhost:3001
           DOCKER_HOST: tcp://localhost:2375
 
-      - name: Stop server
+      - name: Stop servers
         if: always()
         run: |
-          if [ -f server.pid ]; then
-            kill $(cat server.pid) || true
-            rm server.pid
+          if [ -f stats-api.pid ]; then
+            kill $(cat stats-api.pid) || true
+            rm stats-api.pid
+          fi
+          if [ -f sveltekit.pid ]; then
+            kill $(cat sveltekit.pid) || true
+            rm sveltekit.pid
           fi
 
       - name: Upload test results
