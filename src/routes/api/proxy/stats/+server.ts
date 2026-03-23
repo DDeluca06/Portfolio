@@ -11,13 +11,15 @@ import { StatsAPI } from '$lib/api/statsClient';
 export const GET: RequestHandler = async ({ locals }) => {
   try {
     // Get API key from environment (server-side only)
-    const apiKey = process.env.STATS_API_KEY;
+    // Use fallback for development if not configured
+    const apiKey = process.env.STATS_API_KEY || 
+      (process.env.NODE_ENV === 'development' ? 'dev-api-key-not-for-production' : '');
     
     if (!apiKey) {
-      console.error('STATS_API_KEY not configured');
+      console.error('[proxy/stats] STATS_API_KEY not configured');
       return new Response(
         JSON.stringify({
-          error: 'Server configuration error',
+          error: 'Server configuration error - STATS_API_KEY not set',
           requestId: locals.requestId
         }),
         {

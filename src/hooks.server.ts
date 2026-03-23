@@ -18,7 +18,14 @@ interface RateLimitEntry {
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
 // Configuration from environment variables
-const STATS_API_KEY = process.env.STATS_API_KEY;
+// Use fallback for development if not configured
+const STATS_API_KEY = process.env.STATS_API_KEY || 
+  (process.env.NODE_ENV === 'development' ? 'dev-api-key-not-for-production' : '');
+
+// Warn if not configured (but not in test environment)
+if (!STATS_API_KEY && process.env.NODE_ENV !== 'test') {
+  console.warn('[hooks.server.ts] STATS_API_KEY not configured. Using fallback for development.');
+}
 const ALLOWED_ORIGINS =
   process.env.ALLOWED_ORIGINS?.split(",").map((o) => o.trim()) || [];
 const RATE_LIMIT_READS_PER_MINUTE = parseInt(
