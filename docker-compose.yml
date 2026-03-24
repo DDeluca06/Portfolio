@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   portfolio:
     build:
@@ -17,6 +15,8 @@ services:
       - INFLUX_ORG=homelab
       - INFLUX_BUCKET=metrics
       - DOCKER_HOST=tcp://docker-proxy:2375
+      - STATS_API_KEY=${STATS_API_KEY}
+      - STATS_API_URL=http://stats-api:3001
     networks:
       - web
       - backend
