@@ -1,50 +1,68 @@
 import type { RequestHandler } from './$types';
-import Docker from 'dockerode';
+import { getContainers, getDockerInfo, checkDockerConnection } from '$lib/docker';
 import { influxClient } from '$lib/db/influx';
 
 export const prerender = false;
 
-const docker = new Docker();
-
 export const GET: RequestHandler = async ({ locals }) => {
   try {
+    // Check Docker connection first
+    const connection = await checkDockerConnection();
+    if (!connection.connected) {
+      return new Response(
+        JSON.stringify({
+          error: 'Docker connection failed',
+          message: connection.error,
+          requestId: locals.requestId,
+          timestamp: new Date().toISOString()
+        }),
+        {
+          status: 503,
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store'
+          }
+        }
+      );
+    }
+
     // Get list of containers
-    const containers = await docker.listContainers({ all: true });
+    const containers = await getContainers(true);
     
     // Get Docker system info
-    const info = await docker.info();
+    const info = await getDockerInfo();
     
     const dockerStats = {
       timestamp: new Date().toISOString(),
       requestId: locals.requestId,
       system: {
-        name: info.Name,
-        serverVersion: info.ServerVersion,
-        architecture: info.Architecture,
-        osType: info.OSType,
-        kernelVersion: info.KernelVersion,
-        cpus: info.NCPU,
-        memory: info.MemTotal,
+        name: info.name,
+        serverVersion: info.serverVersion,
+        architecture: info.architecture,
+        osType: info.osType,
+        kernelVersion: info.kernelVersion,
+        cpus: info.cpus,
+        memory: info.memory,
         containers: {
-          running: info.ContainersRunning,
-          paused: info.ContainersPaused,
-          stopped: info.ContainersStopped,
-          total: info.Containers
+          running: info.containers.running,
+          paused: info.containers.paused,
+          stopped: info.containers.stopped,
+          total: info.containers.total
         },
-        images: info.Images
+        images: info.images
       },
       containers: containers.map(container => ({
-        id: container.Id.substring(0, 12),
-        names: container.Names,
-        image: container.Image,
-        state: container.State,
-        status: container.Status,
-        ports: container.Ports.map(port => ({
-          private: port.PrivatePort,
-          public: port.PublicPort,
-          type: port.Type
+        id: container.id.substring(0, 12),
+        names: container.names,
+        image: container.image,
+        state: container.state,
+        status: container.status,
+        ports: container.ports.map(port => ({
+          private: port.privatePort,
+          public: port.publicPort,
+          type: port.type
         })),
-        created: new Date(container.Created * 1000).toISOString()
+        created: new Date(container.created * 1000).toISOString()
       }))
     };
 

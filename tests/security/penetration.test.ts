@@ -20,9 +20,9 @@ describe('Security: SQL Injection Prevention', () => {
         { headers: { 'Authorization': `Bearer ${TEST_API_KEY}` } }
       );
 
-      // Should return 200 (InfluxDB handles sanitization) or 400 (validation error)
+      // Should return 200 (InfluxDB handles sanitization), 400 (validation error), or 503 (InfluxDB not configured)
       // Should NOT crash the server
-      expect([200, 400, 404, 500]).toContain(response.status);
+      expect([200, 400, 404, 500, 503]).toContain(response.status);
       
       // Response should be valid JSON
       if (response.headers.get('Content-Type')?.includes('application/json')) {
@@ -40,8 +40,8 @@ describe('Security: SQL Injection Prevention', () => {
       { headers: { 'Authorization': `Bearer ${TEST_API_KEY}` } }
     );
 
-    // Should not execute the malicious query
-    expect([200, 400, 404, 500]).toContain(response.status);
+    // Should not execute the malicious query (may return 503 if InfluxDB not configured)
+    expect([200, 400, 404, 500, 503]).toContain(response.status);
   });
 });
 
